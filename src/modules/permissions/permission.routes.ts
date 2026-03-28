@@ -16,7 +16,10 @@ router.post(
   PermissionController.create
 );
 
-router.get("/", authenticate, authorize("permissions", "READ"), PermissionController.getAll);
+router.get("/",
+  // authenticate,
+  // authorize("permissions", "READ"),
+  PermissionController.getAll);
 router.get("/:id", authenticate, authorize("permissions", "READ"), PermissionController.getById);
 // router.patch(
 //   "/:id",

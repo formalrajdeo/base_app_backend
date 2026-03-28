@@ -16,7 +16,10 @@ router.post(
     PostController.create
 );
 
-router.get("/", authenticate, authorize("posts", "READ"), PostController.getAll);
+router.get("/",
+    // authenticate,
+    // authorize("posts", "READ"),
+    PostController.getAll);
 router.get("/:id", authenticate, authorize("posts", "READ"), PostController.getById);
 router.patch(
     "/:id",

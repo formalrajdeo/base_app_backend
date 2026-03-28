@@ -16,8 +16,14 @@ router.post(
     RoleController.create
 );
 
-router.get("/", authenticate, authorize("roles", "READ"), RoleController.getAll);
-router.get("/:id", authenticate, authorize("roles", "READ"), RoleController.getById);
+router.get("/",
+    // authenticate,
+    // authorize("roles", "READ"),
+    RoleController.getAll);
+router.get("/:id",
+    // authenticate,
+    // authorize("roles", "READ"),
+    RoleController.getById);
 // router.patch(
 //     "/:id",
 //     authenticate,

@@ -23,17 +23,29 @@ export const RoleController = {
         }
     },
 
+    // async getById(req: Request, res: Response, next: NextFunction) {
+    //     try {
+    //         const id = req.params.id as string;
+    //         const role = await RoleService.getRoleById(id);
+    //         if (!role.length) throw new createHttpError.NotFound("Role not found");
+    //         res.json(role[0]);
+    //     } catch (err) {
+    //         next(err);
+    //     }
+    // },
     async getById(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;
-            const role = await RoleService.getRoleById(id);
-            if (!role.length) throw new createHttpError.NotFound("Role not found");
-            res.json(role[0]);
+
+            const role = await RoleService.getRoleWithPermissions(id);
+
+            if (!role) throw new createHttpError.NotFound("Role not found");
+
+            res.json(role);
         } catch (err) {
             next(err);
         }
     },
-
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id as string;

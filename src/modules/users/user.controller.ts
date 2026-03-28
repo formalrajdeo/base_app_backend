@@ -45,7 +45,49 @@ export const UserController = {
       next(err);
     }
   },
+  async assignRoles(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id as string;
+      const { roleIds } = req.body;
 
+      if (!Array.isArray(roleIds)) {
+        throw new createHttpError.BadRequest("roleIds must be an array");
+      }
+
+      const result = await UserService.assignRoles(userId, roleIds);
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+  // 🔥 ADD ROLE
+  async addRole(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id as string;
+      const roleId = req.params.roleId as string;
+
+      const result = await UserService.addRole(userId, roleId);
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  // 🔥 REMOVE ROLE
+  async removeRole(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id as string;
+      const roleId = req.params.roleId as string;
+
+      const result = await UserService.removeRole(userId, roleId);
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id as string;
