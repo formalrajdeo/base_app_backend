@@ -1,12 +1,18 @@
 // src/types/express.d.ts
-import { Request } from "express";
+
+import { auth } from "@/lib/auth";
+
+// Infer session type from better-auth
+type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 declare module "express-serve-static-core" {
     interface Request {
-        user?: {
-            id: string;
-            roles?: string[];
-            [key: string]: any;
-        };
+        // Logged-in user
+        user?: Session["user"];
+
+        // Full session object
+        session?: Session;
     }
 }
+
+export { };

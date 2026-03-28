@@ -21,7 +21,7 @@ export const auth = betterAuth({
   advanced: {
     // 2. ADD THIS: Recommended for local development/testing only
     // This allows requests without an Origin header to succeed
-    disableOriginCheck: process.env.NODE_ENV !== "production",
+    disableCSRFCheck: process.env.NODE_ENV !== "production",
   },
   acceptNullOrigin: process.env.NODE_ENV === "development",
 });

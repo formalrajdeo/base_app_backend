@@ -1,6 +1,12 @@
 import { db } from "@/config/db.js";
-import { roles, permissions, userRoles, rolePermissions } from "@/db/schema/rbac.js";
+import {
+    roles,
+    permissions,
+    userRoles,
+    rolePermissions,
+} from "@/db/schema/rbac.js";
 import { eq, inArray } from "drizzle-orm";
+import { logger } from "@/lib/logger";
 
 export async function checkPermission(
     userId: string,
@@ -8,25 +14,49 @@ export async function checkPermission(
     action: string,
     context?: any
 ): Promise<boolean> {
-    const getUserRoles = await db
-        .select({ roleId: roles.id })
-        .from(userRoles)
-        .innerJoin(roles, eq(roles.id, userRoles.roleId))
-        .where(eq(userRoles.userId, userId));
+    try {
+        // 1. Get user roles
+        const userRolesResult = await db
+            .select({ roleId: roles.id })
+            .from(userRoles)
+            .innerJoin(roles, eq(roles.id, userRoles.roleId))
+            .where(eq(userRoles.userId, userId));
 
-    if (!getUserRoles.length) return false;
+        if (!userRolesResult.length) {
+            logger.warn(`No roles found for user ${userId}`);
+            return false;
+        }
 
-    const roleIds = getUserRoles.map(r => r.roleId);
+        const roleIds = userRolesResult.map((r) => r.roleId);
 
-    const perms = await db
-        .select()
-        .from(rolePermissions)
-        .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
-        .where(inArray(rolePermissions.roleId, roleIds));
+        // 2. Get permissions
+        const perms = await db
+            .select({
+                resource: permissions.resource,
+                action: permissions.action,
+            })
+            .from(rolePermissions)
+            .innerJoin(
+                permissions,
+                eq(permissions.id, rolePermissions.permissionId)
+            )
+            .where(inArray(rolePermissions.roleId, roleIds));
 
-    const allowed = perms.some(
-        p => p.permissions.resource === resource && p.permissions.action === action
-    );
+        // 3. Check permission
+        const allowed = perms.some(
+            (p) => p.resource === resource && p.action === action
+        );
 
-    return allowed;
+        return allowed;
+    } catch (error) {
+        logger.error("Permission check failed", {
+            userId,
+            resource,
+            action,
+            error,
+        });
+
+        // IMPORTANT: throw error so global handler catches it
+        throw error;
+    }
 }

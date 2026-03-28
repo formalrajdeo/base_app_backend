@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import createHttpError from "http-errors";
 import { checkPermission } from "@/services/authorization.service.js";
+import { logger } from "better-auth";
 
 /**
  * Dynamic authorization middleware
@@ -15,7 +16,7 @@ export const authorize = (resource: string, action: string) => {
 
     // dynamic permission check, ABAC optional via request body
     const allowed = await checkPermission(user.id, resource, action, req.body);
-
+    logger.info(`Authorization check for user ${user.id} on ${resource}:${action} - ${allowed ? "ALLOWED" : "DENIED"}`);
     if (!allowed) return next(new createHttpError.Forbidden("Access denied"));
 
     next();
