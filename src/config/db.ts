@@ -31,4 +31,4 @@ const config: MySql2DrizzleConfig<typeof combinedSchema> = {
 
 export const db = drizzle(pool, config);
 
-logger.info("✅ MySQL connected via Drizzle ORM");
+logger.info("MySQL connected via Drizzle ORM");

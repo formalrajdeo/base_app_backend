@@ -83,15 +83,15 @@ INSERT INTO permissions (id, resource_id, action) VALUES
 -- ROLE PERMISSIONS
 -- =============================
 
--- ✅ ADMIN → ALL
+-- ADMIN → ALL
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT 'r_admin', id FROM permissions;
 
--- ✅ SUPERADMIN → ALL (same as admin but explicit)
+-- SUPERADMIN → ALL (same as admin but explicit)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT 'r_superadmin', id FROM permissions;
 
--- ✅ EDITOR → ONLY POSTS
+-- EDITOR → ONLY POSTS
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT 'r_editor', id FROM permissions WHERE resource_id = 'res_posts';
 

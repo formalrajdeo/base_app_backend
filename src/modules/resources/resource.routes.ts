@@ -15,7 +15,7 @@ const router = Router();
  * =========================
  */
 
-// ✅ Create resource
+// Create resource
 router.post(
     "/",
     authenticate,
@@ -24,7 +24,7 @@ router.post(
     ResourceController.create
 );
 
-// ✅ Get all resources
+// Get all resources
 router.get(
     "/",
     authenticate,
@@ -32,7 +32,7 @@ router.get(
     ResourceController.getAll
 );
 
-// ✅ Get resources with permissions (grouped)
+// Get resources with permissions (grouped)
 router.get(
     "/with-permissions",
     authenticate,
@@ -53,7 +53,7 @@ router.delete(
  * =========================
  */
 
-// ✅ Create new action for a resource
+// Create new action for a resource
 router.post(
     "/:resourceId/actions",
     authenticate,
@@ -61,7 +61,7 @@ router.post(
     ResourceController.createAction
 );
 
-// ✅ Delete action from resource
+// Delete action from resource
 router.delete(
     "/:resourceId/actions/:permissionId",
     authenticate,

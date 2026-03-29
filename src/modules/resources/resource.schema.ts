@@ -1,7 +1,7 @@
 // src/modules/resources/resource.schema.ts
 import { z } from "zod";
 
-// ✅ Create resource
+// Create resource
 export const createResourceSchema = z.object({
     name: z
         .string()
@@ -15,7 +15,7 @@ export const createResourceSchema = z.object({
         .optional(),
 });
 
-// ✅ Update resource (optional for future)
+// Update resource (optional for future)
 export const updateResourceSchema = z.object({
     name: z
         .string()

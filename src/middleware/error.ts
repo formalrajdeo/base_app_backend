@@ -15,7 +15,7 @@ export const errorHandler = (
   // Log full error
   logger.error(err);
 
-  // ✅ Handle known HTTP errors (createHttpError)
+  // Handle known HTTP errors (createHttpError)
   if (isHttpError(err)) {
     return res.status(err.statusCode).json({
       success: false,
@@ -24,7 +24,7 @@ export const errorHandler = (
     });
   }
 
-  // ❌ Unknown errors (fallback)
+  // Unknown errors (fallback)
   return res.status(500).json({
     success: false,
     message: isDev ? err.message : "Internal Server Error",

@@ -98,9 +98,9 @@ app.use(errorHandler);
 (async () => {
     try {
         await db.execute("SELECT 1");  // simple query to test connection
-        logger.info("✅ Database connected successfully");
+        logger.info("Database connected successfully");
     } catch (err) {
-        logger.error("❌ Database connection failed", err);
+        logger.error("Database connection failed", err);
         process.exit(1); // stop server if DB fails
     }
 })();

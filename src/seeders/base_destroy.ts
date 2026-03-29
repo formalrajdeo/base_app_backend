@@ -21,7 +21,7 @@ async function destroy() {
   await db.delete(user).execute();
   await db.delete(resources).execute();
 
-  console.log("✅ All tables cleared!");
+  console.log("All tables cleared!");
   // Gracefully close the MySQL pool
   await pool.end();
   process.exit(0); // optional, ensures exit

@@ -166,7 +166,7 @@ async function seed() {
 
   // ----- ROLE PERMISSIONS -----
 
-  // ✅ Admin gets ALL permissions
+  // Admin gets ALL permissions
   await db.insert(rolePermissions).values(
     permList.map(p => ({
       roleId: adminRoleId,
@@ -174,7 +174,7 @@ async function seed() {
     }))
   );
 
-  // ✅ Editor gets ONLY posts permissions
+  // Editor gets ONLY posts permissions
   await db.insert(rolePermissions).values(
     permList
       .filter(p => p.resourceId === postsResourceId) // 🔥 FIXED
@@ -218,7 +218,7 @@ async function seed() {
     }))
   );
 
-  console.log("✅ Seeding done!");
+  console.log("Seeding done!");
   // Gracefully close the MySQL pool
   await pool.end();
   process.exit(0); // optional, ensures exit
