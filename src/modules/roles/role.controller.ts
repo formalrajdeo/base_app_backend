@@ -14,6 +14,17 @@ export const RoleController = {
         }
     },
 
+    async update(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const data = req.body;
+            const updatedUser = await RoleService.update(id, data);
+            if (!updatedUser) throw new createHttpError.NotFound("User not found");
+            res.json(updatedUser);
+        } catch (err) {
+            next(err);
+        }
+    },
     async getAll(req: Request, res: Response, next: NextFunction) {
         try {
             const roles = await RoleService.getAllRoles();
@@ -42,6 +53,51 @@ export const RoleController = {
             if (!role) throw new createHttpError.NotFound("Role not found");
 
             res.json(role);
+        } catch (err) {
+            next(err);
+        }
+    },
+    async assignPermission(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { roleId, permissionId } = req.params as { roleId: string; permissionId: string };
+
+            await RoleService.assignPermission(roleId, permissionId);
+
+            res.json({ success: true });
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    async removePermission(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { roleId, permissionId } = req.params as { roleId: string; permissionId: string };
+
+            await RoleService.removePermission(roleId, permissionId);
+
+            res.json({ success: true });
+        } catch (err) {
+            next(err);
+        }
+    },
+    async assignResource(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { roleId, resourceId } = req.params as { roleId: string; resourceId: string };
+
+            await RoleService.assignResourceById(roleId, resourceId);
+
+            res.json({ success: true });
+        } catch (err) {
+            next(err);
+        }
+    },
+    async removeResource(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { roleId, resourceId } = req.params as { roleId: string; resourceId: string };
+
+            await RoleService.removeResource(roleId, resourceId);
+
+            res.json({ success: true });
         } catch (err) {
             next(err);
         }

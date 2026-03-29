@@ -5,6 +5,7 @@ import {
   permissions,
   rolePermissions,
   userRoles,
+  resources,
 } from "../db/schema/rbac";
 import { posts } from "../db/schema/posts";
 import { policies } from "../db/schema/abac";
@@ -129,20 +130,43 @@ async function seed() {
     { id: guestRoleId, name: "guest" },
   ]);
 
+  // ----- RESOURCES -----
+  const usersResourceId = uuid();
+  const postsResourceId = uuid();
+
+  await db.insert(resources).values([
+    {
+      id: usersResourceId,
+      name: "users",
+      description: "User management",
+    },
+    {
+      id: postsResourceId,
+      name: "posts",
+      description: "Post management",
+    },
+  ]);
+
   // ----- PERMISSIONS -----
   const permList = [
-    { resource: "users", action: "READ" },
-    { resource: "users", action: "CREATE" },
-    { resource: "users", action: "DELETE" },
-    { resource: "posts", action: "CREATE" },
-    { resource: "posts", action: "READ" },
-    { resource: "posts", action: "DELETE" },
-    { resource: "posts", action: "UPDATE" },
-  ].map(p => ({ id: uuid(), ...p }));
+    { resourceId: usersResourceId, action: "READ" },
+    { resourceId: usersResourceId, action: "CREATE" },
+    { resourceId: usersResourceId, action: "DELETE" },
+
+    { resourceId: postsResourceId, action: "CREATE" },
+    { resourceId: postsResourceId, action: "READ" },
+    { resourceId: postsResourceId, action: "DELETE" },
+    { resourceId: postsResourceId, action: "UPDATE" },
+  ].map(p => ({
+    id: uuid(),
+    ...p,
+  }));
 
   await db.insert(permissions).values(permList);
 
   // ----- ROLE PERMISSIONS -----
+
+  // ✅ Admin gets ALL permissions
   await db.insert(rolePermissions).values(
     permList.map(p => ({
       roleId: adminRoleId,
@@ -150,10 +174,14 @@ async function seed() {
     }))
   );
 
+  // ✅ Editor gets ONLY posts permissions
   await db.insert(rolePermissions).values(
     permList
-      .filter(p => p.resource === "posts")
-      .map(p => ({ roleId: editorRoleId, permissionId: p.id }))
+      .filter(p => p.resourceId === postsResourceId) // 🔥 FIXED
+      .map(p => ({
+        roleId: editorRoleId,
+        permissionId: p.id,
+      }))
   );
 
   // ----- USER ROLES -----
@@ -173,6 +201,22 @@ async function seed() {
     { id: uuid(), resource: "users", action: "DELETE", effect: "deny", conditions: null },
     { id: uuid(), resource: "posts", action: "DELETE", effect: "deny", conditions: null },
   ]);
+
+  // superadmin role
+  const superAdminRoleId = uuid();
+
+  await db.insert(roles).values({
+    id: superAdminRoleId,
+    name: "superadmin",
+  });
+
+  // give ALL permissions
+  await db.insert(rolePermissions).values(
+    permList.map(p => ({
+      roleId: superAdminRoleId,
+      permissionId: p.id,
+    }))
+  );
 
   console.log("✅ Seeding done!");
   // Gracefully close the MySQL pool

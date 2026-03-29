@@ -8,6 +8,20 @@
       "when": 1774623057019,
       "tag": "0000_high_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774718336224,
+      "tag": "0001_fresh_tattoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774720240303,
+      "tag": "0002_careful_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }

@@ -90,8 +90,22 @@ CREATE TABLE `user_roles` (
 	`role_id` varchar(191) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `resources` (
+	`id` varchar(191) NOT NULL,
+	`name` varchar(100) NOT NULL,
+	`description` text,
+	CONSTRAINT `resources_id` PRIMARY KEY(`id`),
+	CONSTRAINT `resources_name_unique` UNIQUE(`name`)
+);
+--> statement-breakpoint
 ALTER TABLE `account` ADD CONSTRAINT `account_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `session` ADD CONSTRAINT `session_user_id_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `permissions` RENAME COLUMN `resource` TO `resource_id`;--> statement-breakpoint
+ALTER TABLE `permissions` MODIFY COLUMN `resource_id` varchar(191) NOT NULL;--> statement-breakpoint
+ALTER TABLE `permissions` ADD CONSTRAINT `permissions_resource_id_resources_id_fk` FOREIGN KEY (`resource_id`) REFERENCES `resources`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_role_id_roles_id_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_permission_id_permissions_id_fk` FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `user_roles` ADD CONSTRAINT `user_roles_role_id_roles_id_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE cascade ON UPDATE no action;
 CREATE INDEX `account_userId_idx` ON `account` (`user_id`);--> statement-breakpoint
 CREATE INDEX `session_userId_idx` ON `session` (`user_id`);--> statement-breakpoint
 CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);

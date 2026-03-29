@@ -17,8 +17,8 @@ router.post(
 );
 
 router.get("/",
-    // authenticate,
-    // authorize("posts", "READ"),
+    authenticate,
+    authorize("posts", "READ"),
     PostController.getAll);
 router.get("/:id", authenticate, authorize("posts", "READ"), PostController.getById);
 router.patch(

@@ -22,6 +22,7 @@ import { db } from "./config/db.js";
 
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
+import resourceRoutes from "./modules/resources/resource.routes.js";
 
 const app = express();
 
@@ -80,6 +81,7 @@ app.use(requestLogger);
 //
 // 🚏 ROUTES
 app.use("/api/v1/roles", roleRoutes);
+app.use("/api/v1/resources", resourceRoutes);
 app.use("/api/v1/permissions", permissionRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/posts", postRoutes);

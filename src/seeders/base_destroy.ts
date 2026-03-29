@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { permissions, rolePermissions, roles, userRoles } from "@/db/schema/rbac";
+import { permissions, resources, rolePermissions, roles, userRoles } from "@/db/schema/rbac";
 import { account, session, user, verification } from "@/db/schema/auth";
 import { posts } from "@/db/schema/posts";
 import { policies } from "@/db/schema/abac";
@@ -19,6 +19,7 @@ async function destroy() {
   await db.delete(posts).execute();
   await db.delete(policies).execute();
   await db.delete(user).execute();
+  await db.delete(resources).execute();
 
   console.log("✅ All tables cleared!");
   // Gracefully close the MySQL pool
