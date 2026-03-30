@@ -1,3 +1,4 @@
+import { desc } from "drizzle-orm";
 import { z } from "zod";
 
 export const createPermissionSchema = z
@@ -5,6 +6,7 @@ export const createPermissionSchema = z
     resource: z.string().optional(), // new resource name
     resourceId: z.string().optional(), // existing resource
     action: z.string().min(1, "Action required"),
+    description: z.string().min(5, "Description required"),
   })
   .refine((data) => data.resource || data.resourceId, {
     message: "Either resource or resourceId is required",
