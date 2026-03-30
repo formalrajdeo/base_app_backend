@@ -10,7 +10,6 @@ export const PermissionController = {
       const { resource, resourceId, action, description } = req.body as CreatePermissionInput;
 
       if (!action) throw createHttpError.BadRequest("Action is required");
-      if (!description) throw createHttpError.BadRequest("Description is required");
 
       let permission;
 
@@ -18,9 +17,9 @@ export const PermissionController = {
 
       if (resource) {
         // Assign action to existing resource OR create resource
-        permission = await PermissionService.createOrAssignPermission(resource, action, description);
+        permission = await PermissionService.createOrAssignPermission(resource, action, description ?? null);
       } else if (resourceId) {
-        permission = await PermissionService.assignPermission(resourceId, action, description);
+        permission = await PermissionService.assignPermission(resourceId, action);
       } else {
         throw createHttpError.BadRequest("Either 'resource' or 'resourceId' must be provided");
       }

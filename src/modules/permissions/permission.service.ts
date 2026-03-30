@@ -5,8 +5,8 @@ import { v4 as uuid } from "uuid";
 import createHttpError from "http-errors";
 
 export const PermissionService = {
-  async createOrAssignPermission(resourceName: string, action: string, description: string) {
-    if (!resourceName || !action || !description) throw createHttpError.BadRequest("Resource, action, and description required");
+  async createOrAssignPermission(resourceName: string, action: string, description: string | null) {
+    if (!resourceName || !action) throw createHttpError.BadRequest("Resource and action required");
 
     // Check if resource exists
     const existingResource = await db.select().from(resources).where(eq(resources.name, resourceName));
@@ -24,11 +24,13 @@ export const PermissionService = {
         throw createHttpError.Conflict(`Permission '${action}' already exists for resource '${resourceName}'`);
       }
 
-      const permission = { id: uuid(), resourceId, action, description };
+      const permission = { id: uuid(), resourceId, action };
       await db.insert(permissions).values(permission);
       return { resource: existingResource[0], permission };
     } else {
-      // Resource does not exist → create resource + permission
+      // Resource does not exist → create resource + permission + description
+      if (!description) throw createHttpError.BadRequest("Description required");
+
       const resource = { id: uuid(), name: resourceName, description: description };
       await db.insert(resources).values(resource);
 
@@ -37,27 +39,11 @@ export const PermissionService = {
       return { resource, permission };
     }
   },
-  // Create resource + initial permission
-  async createResourceWithPermission(resourceName: string, action: string, description: string) {
-    if (!resourceName || !action || !description) throw createHttpError.BadRequest("Resource, action, and description required");
-
-    const existingResource = await db.select().from(resources).where(eq(resources.name, resourceName));
-    if (existingResource.length) throw createHttpError.Conflict(`Resource '${resourceName}' already exists`);
-
-    const resource = { id: uuid(), name: resourceName, description: description };
-    await db.insert(resources).values(resource);
-
-    const permission = { id: uuid(), resourceId: resource.id, action, description };
-    await db.insert(permissions).values(permission);
-
-    return { resource, permission };
-  },
 
   // Assign action to existing resource
-  async assignPermission(resourceId: string, action: string, description: string) {
+  async assignPermission(resourceId: string, action: string) {
     if (!resourceId) throw createHttpError.BadRequest("Resource ID is required");
     if (!action) throw createHttpError.BadRequest("Action is required");
-    if (!description) throw createHttpError.BadRequest("Description is required");
 
     const resource = await db.select().from(resources).where(eq(resources.id, resourceId));
     if (!resource.length) throw createHttpError.BadRequest("Resource not found");
