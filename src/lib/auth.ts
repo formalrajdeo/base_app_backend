@@ -1,10 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db"; // your drizzle instance
-import { account, session, user, verification } from "@/db/schema/auth";
+import { account, session, user, verification, twoFactor } from "@/db/schema/auth";
 import { sendEmailConfirmationEmail } from "./emails/email-confirmation";
 import { sendDeleteAccountVerificationEmail } from "./emails/delete-account-verification";
-import { twoFactor } from "better-auth/plugins";
+import { twoFactor as twoFactorPlugin } from "better-auth/plugins";
 import { admin as adminPlugin } from "better-auth/plugins/admin"
 
 function requireEnv(name: string): string {
@@ -24,6 +24,10 @@ export const ENV = {
 // Define your roles and permissions here. This is a simple example with "user" and "admin" roles.
 import { createAccessControl } from "better-auth/plugins/access"
 import { defaultStatements, userAc, adminAc } from "better-auth/plugins/admin/access"
+import { sendPasswordResetEmail } from "./emails/password-reset-email";
+import { sendEmailVerificationEmail } from "./emails/email-verification";
+import { createAuthMiddleware } from "better-auth/api";
+import { sendWelcomeEmail } from "./emails/welcome-email";
 
 export const betterAuthPluginAccessControl = createAccessControl(defaultStatements)
 
@@ -43,10 +47,21 @@ export const auth = betterAuth({
   trustedOrigins: [ENV.BACKEND_BASE_URL, ENV.FRONTEND_BASE_URL],
   database: drizzleAdapter(db, {
     provider: "mysql",
-    schema: { user, session, account, verification },
+    schema: { user, session, account, verification, twoFactor },
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail({ user, url })
+    },
+  },
+  emailVerification: {
+    autoSignInAfterVerification: true,
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmailVerificationEmail({ user, url })
+    },
   },
   session: {
     cookieCache: {
@@ -69,18 +84,17 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
       sendDeleteAccountVerification: async ({ user, url }) => {
-        console.log({ user, url })
         await sendDeleteAccountVerificationEmail({ user, url })
       },
     },
-    // additionalFields: {
-    //   role: {
-    //     type: "string" as unknown as ["user", "admin"],
-    //     required: true,
-    //     defaultValue: "user",
-    //     input: false,
-    //   },
-    // },
+    additionalFields: {
+      role: {
+        type: "string" as unknown as ["user", "admin"],
+        required: true,
+        defaultValue: "user",
+        input: false,
+      },
+    },
   },
   socialProviders: {
     github: {
@@ -93,14 +107,28 @@ export const auth = betterAuth({
     // This allows requests without an Origin header to succeed
     disableCSRFCheck: process.env.NODE_ENV !== "production",
   },
+  hooks: {
+    after: createAuthMiddleware(async ctx => {
+      if (ctx.path.startsWith("/sign-up")) {
+        const user = ctx.context.newSession?.user ?? {
+          name: ctx.body.name,
+          email: ctx.body.email,
+        }
+
+        if (user != null) {
+          await sendWelcomeEmail(user)
+        }
+      }
+    }),
+  },
   acceptNullOrigin: process.env.NODE_ENV === "development",
   plugins: [
-    twoFactor(),
+    twoFactorPlugin(),
     adminPlugin({
       betterAuthPluginAccessControl,
       roles: {
-        betterAuthPluginUser,
-        betterAuthPluginAdmin,
+        user: betterAuthPluginUser,
+        admin: betterAuthPluginAdmin,
       },
     }),
     // organization({

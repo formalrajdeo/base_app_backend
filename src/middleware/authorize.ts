@@ -18,10 +18,7 @@ export const authorize = (resource: string, action: string) => {
 
       const allowed = await checkPermission(user.id, resource, action);
 
-      console.log(
-        `Authorization check for user ${user.id} on ${resource}:${action} - ${allowed ? "ALLOWED" : "DENIED"
-        }`
-      );
+      // console.log(`Authorization check for user ${user.id} on ${resource}:${action} - ${allowed ? "ALLOWED" : "DENIED"}`);
 
       if (!allowed) {
         return next(new createHttpError.Forbidden("Access denied"));
