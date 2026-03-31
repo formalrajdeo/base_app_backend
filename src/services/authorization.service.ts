@@ -17,7 +17,7 @@ export async function checkPermission(
     const userRolesResult = await db
         .select({
             roleId: roles.id,
-            roleName: roles.name, // 👈 ADD THIS
+            roleName: roles.name,
         })
         .from(userRoles)
         .innerJoin(roles, eq(roles.id, userRoles.roleId))

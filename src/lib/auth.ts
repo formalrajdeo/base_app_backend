@@ -28,6 +28,9 @@ import { sendPasswordResetEmail } from "./emails/password-reset-email";
 import { sendEmailVerificationEmail } from "./emails/email-verification";
 import { createAuthMiddleware } from "better-auth/api";
 import { sendWelcomeEmail } from "./emails/welcome-email";
+import { roles, userRoles } from "@/db/schema/rbac";
+import { eq } from "drizzle-orm";
+import { logger } from "./logger";
 
 export const betterAuthPluginAccessControl = createAccessControl(defaultStatements)
 
@@ -89,10 +92,10 @@ export const auth = betterAuth({
     },
     additionalFields: {
       role: {
-        type: "string" as unknown as ["user", "admin"],
+        type: "string",
         required: true,
         defaultValue: "user",
-        input: false,
+        input: false
       },
     },
   },
@@ -109,15 +112,50 @@ export const auth = betterAuth({
   },
   hooks: {
     after: createAuthMiddleware(async ctx => {
-      if (ctx.path.startsWith("/sign-up")) {
-        const user = ctx.context.newSession?.user ?? {
-          name: ctx.body.name,
-          email: ctx.body.email,
-        }
+      if (!ctx.path.startsWith("/sign-up")) return
 
-        if (user != null) {
-          await sendWelcomeEmail(user)
-        }
+      const newUser = ctx.context.newSession?.user ?? {
+        name: ctx.body.name,
+        email: ctx.body.email,
+      }
+
+      if (!newUser) return
+
+      // 1 Send welcome email
+      try {
+        await sendWelcomeEmail(newUser)
+      } catch (err) {
+        logger.error("Failed to send welcome email:", err)
+      }
+
+      // 2 Get the newly created user record from DB
+      const [userRecord] = await db.select().from(user)
+        .where(eq(user.email, newUser.email))
+        .limit(1)
+
+      if (!userRecord) {
+        logger.error("User record not found after signup:", newUser.email)
+        return
+      }
+
+      // 3 Get default 'user' role from roles table
+      const [defaultRole] = await db.select().from(roles)
+        .where(eq(roles.name, "user"))
+        .limit(1)
+
+      if (!defaultRole) {
+        logger.error("Default role 'user' not found in roles table")
+        return
+      }
+
+      // 4 Insert into user_roles
+      try {
+        await db.insert(userRoles).values({
+          userId: userRecord.id,
+          roleId: defaultRole.id,
+        })
+      } catch (err) {
+        logger.error("Failed to assign default role to user:", err)
       }
     }),
   },

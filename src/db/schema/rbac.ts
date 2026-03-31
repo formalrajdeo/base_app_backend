@@ -2,6 +2,7 @@ import {
     mysqlTable,
     varchar,
     text,
+    timestamp,
 } from "drizzle-orm/mysql-core";
 
 /**
@@ -10,6 +11,11 @@ import {
 export const roles = mysqlTable("roles", {
     id: varchar("id", { length: 191 }).primaryKey(),
     name: varchar("name", { length: 100 }).notNull().unique(),
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+        .defaultNow()
+        .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull(),
 });
 
 /**
@@ -19,6 +25,11 @@ export const resources = mysqlTable("resources", {
     id: varchar("id", { length: 191 }).primaryKey(),
     name: varchar("name", { length: 100 }).notNull().unique(),
     description: text("description"),
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+        .defaultNow()
+        .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull(),
 });
 
 /**
@@ -36,6 +47,11 @@ export const permissions = mysqlTable("permissions", {
         }),
 
     action: varchar("action", { length: 50 }).notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+        .defaultNow()
+        .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull(),
 });
 
 /**
@@ -53,6 +69,11 @@ export const rolePermissions = mysqlTable("role_permissions", {
         .references(() => permissions.id, {
             onDelete: "cascade",
         }),
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+        .defaultNow()
+        .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull(),
 });
 
 /**
@@ -66,4 +87,9 @@ export const userRoles = mysqlTable("user_roles", {
         .references(() => roles.id, {
             onDelete: "cascade",
         }),
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+        .defaultNow()
+        .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull(),
 });

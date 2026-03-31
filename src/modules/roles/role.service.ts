@@ -1,7 +1,7 @@
 // src/modules/roles/role.service.ts
 import { db } from "@/config/db.js";
 import { resources, roles } from "@/db/schema/rbac.js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, notInArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
 import { rolePermissions, permissions } from "@/db/schema/rbac.js";
@@ -23,7 +23,10 @@ export const RoleService = {
     return await RoleService.getRoleById(id);
   },
   async getAllRoles() {
-    return await db.select().from(roles);
+    return await db
+      .select()
+      .from(roles)
+      .where(notInArray(roles.name, ['superadmin'])); // Exclude superadmin
   },
 
   async getRoleById(id: string) {
