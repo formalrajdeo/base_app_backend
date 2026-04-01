@@ -1,9 +1,22 @@
+delete from user;
+delete from account;
+delete from session;
+delete from verification;
+delete from posts;
+delete from resources;
+delete from permissions;
+delete from roles;
+delete from role_permissions;
+delete from user_roles;
+delete from policies;
+delete from two_factor;
 -- =========================
 -- USERS
 -- =========================
 INSERT INTO user (id, name, email, email_verified, role, banned)
 VALUES
-('u1', 'Super Admin', 'superadmin@example.com', true, 'user', false),
+('u0', 'Super Admin', 'superadmin@example.com', true, 'admin', false),
+('u1', 'Alice Edward', 'alice@example.com', true, 'user', false),
 ('u2', 'John Doe', 'john@example.com', true, 'user', false),
 ('u3', 'Jane Smith', 'jane@example.com', true, 'user', false),
 ('u4', 'Mike Ross', 'mike@example.com', false, 'user', false),
@@ -14,6 +27,7 @@ VALUES
 -- =========================
 INSERT INTO account (id, account_id, password, provider_id, user_id, created_at, updated_at)
 VALUES
+('a0', 'acc0', 'a2304398871383c77711f49417c1fb69:d06b5de1c55ec5ade4d1220959e89d6c9944eb92d5314dd4060c10f167378e80c190fb2eea966345a2e70bdfc08e5a4cb9bb9689850e48c3f4baaf4a52157932', 'credential', 'u0', NOW(), NOW()),
 ('a1', 'acc1', 'a2304398871383c77711f49417c1fb69:d06b5de1c55ec5ade4d1220959e89d6c9944eb92d5314dd4060c10f167378e80c190fb2eea966345a2e70bdfc08e5a4cb9bb9689850e48c3f4baaf4a52157932', 'credential', 'u1', NOW(), NOW()),
 ('a2', 'acc2', 'a2304398871383c77711f49417c1fb69:d06b5de1c55ec5ade4d1220959e89d6c9944eb92d5314dd4060c10f167378e80c190fb2eea966345a2e70bdfc08e5a4cb9bb9689850e48c3f4baaf4a52157932', 'credential', 'u2', NOW(), NOW()),
 ('a3', 'acc3', 'a2304398871383c77711f49417c1fb69:d06b5de1c55ec5ade4d1220959e89d6c9944eb92d5314dd4060c10f167378e80c190fb2eea966345a2e70bdfc08e5a4cb9bb9689850e48c3f4baaf4a52157932', 'credential', 'u3', NOW(), NOW()),
@@ -25,6 +39,7 @@ VALUES
 -- =========================
 INSERT INTO session (id, expires_at, token, created_at, updated_at, user_id)
 VALUES
+('s0', NOW() + INTERVAL 1 DAY, 'token0', NOW(), NOW(), 'u0'),
 ('s1', NOW() + INTERVAL 1 DAY, 'token1', NOW(), NOW(), 'u1'),
 ('s2', NOW() + INTERVAL 1 DAY, 'token2', NOW(), NOW(), 'u2'),
 ('s3', NOW() + INTERVAL 1 DAY, 'token3', NOW(), NOW(), 'u3'),
@@ -36,6 +51,7 @@ VALUES
 -- =========================
 INSERT INTO verification (id, identifier, value, expires_at)
 VALUES
+('v0', 'email', 'code0', NOW() + INTERVAL 1 DAY),
 ('v1', 'email', 'code1', NOW() + INTERVAL 1 DAY),
 ('v2', 'email', 'code2', NOW() + INTERVAL 1 DAY),
 ('v3', 'email', 'code3', NOW() + INTERVAL 1 DAY),
@@ -47,6 +63,7 @@ VALUES
 -- =========================
 INSERT INTO posts (id, title, content)
 VALUES
+('p0', 'Post 0', 'Content 0'),
 ('p1', 'Post 1', 'Content 1'),
 ('p2', 'Post 2', 'Content 2'),
 ('p3', 'Post 3', 'Content 3'),
@@ -80,7 +97,8 @@ VALUES
 -- =========================
 INSERT INTO roles (id, name)
 VALUES
-('role1', 'superadmin'),
+('role0', 'superadmin'),
+('role1', 'admin'),
 ('role2', 'user'),
 ('role3', 'editor'),
 ('role4', 'viewer'),
@@ -91,7 +109,8 @@ VALUES
 -- =========================
 INSERT INTO role_permissions (role_id, permission_id)
 VALUES
-('role1', 'perm1'),
+('role0', 'perm1'),
+('role0', 'perm2'),
 ('role1', 'perm2'),
 ('role2', 'perm2'),
 ('role3', 'perm1'),
@@ -102,7 +121,9 @@ VALUES
 -- =========================
 INSERT INTO user_roles (user_id, role_id)
 VALUES
-('u1', 'role1'),
+('u0', 'role0'),
+('u0', 'role1'),
+('u0', 'role2'),
 ('u1', 'role2'),
 ('u2', 'role2'),
 ('u3', 'role2'),

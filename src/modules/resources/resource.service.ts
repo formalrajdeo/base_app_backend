@@ -1,7 +1,6 @@
 import { db } from "@/db";
 import { resources, permissions, rolePermissions } from "@/db/schema/rbac";
 import { v4 as uuid } from "uuid";
-import { DEFAULT_ACTIONS } from "@/constants/permissions";
 import { and, eq } from "drizzle-orm";
 
 export const ResourceService = {
@@ -24,6 +23,7 @@ export const ResourceService = {
             description,
         });
 
+        const DEFAULT_ACTIONS = ["read", "create", "update", "delete"] as const;
         const perms = DEFAULT_ACTIONS.map(action => ({
             id: uuid(),
             resourceId,

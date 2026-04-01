@@ -23,6 +23,8 @@ import { db } from "./config/db.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
 import resourceRoutes from "./modules/resources/resource.routes.js";
+import { connectRedis, redis } from "./config/redis.js";
+import { pool } from "./db/index.js";
 
 const app = express();
 
@@ -96,54 +98,60 @@ app.get("/", (req, res) => {
 // 🚨 ERROR HANDLER
 app.use(errorHandler);
 
-// 🛠️ Test DB connection at startup
-(async () => {
+//
+// 🛠️ STARTUP FUNCTION: Test DB + Redis then start server
+const startServer = async () => {
     try {
-        await db.execute("SELECT 1");  // simple query to test connection
-        logger.info("Database connected successfully");
+        // 1️⃣ Test MySQL connection
+        await db.execute("SELECT 1");
+        logger.info("✅ Database connected successfully");
+
+        // 2️⃣ Test Redis connection
+        await connectRedis();
+
+        // 3️⃣ Start HTTP server
+        const PORT = Number(process.env.PORT || 8000);
+        const server = http.createServer(app);
+
+        server.listen(PORT, () => {
+            logger.info(`🚀 Server running on http://localhost:${PORT}`);
+        });
+
+        //
+        // 🛑 GRACEFUL SHUTDOWN
+        const shutdown = (signal: string) => {
+            logger.warn(`⚠️ ${signal} received. Closing server...`);
+
+            server.close(async () => {
+                logger.info("HTTP server closed");
+                try {
+                    // Close DB pool if using one
+                    await pool.end?.(); // optional depending on your db driver
+                    await redis.quit(); // close Redis connection
+                    logger.info("Cleanup done. Exiting...");
+                    process.exit(0);
+                } catch (err) {
+                    logger.error("Shutdown error", err);
+                    process.exit(1);
+                }
+            });
+
+            setTimeout(() => {
+                logger.error("Force shutdown");
+                process.exit(1);
+            }, 10000).unref();
+        };
+
+        process.on("SIGINT", shutdown);
+        process.on("SIGTERM", shutdown);
     } catch (err) {
-        logger.error("Database connection failed", err);
-        process.exit(1); // stop server if DB fails
+        logger.error("❌ Startup failed", err);
+        process.exit(1); // fail fast if DB or Redis fails
     }
-})();
-
-//
-// 🚀 SERVER
-const server = http.createServer(app);
-const PORT = process.env.PORT;
-
-server.listen(PORT, () => {
-    logger.info(`🚀 Server running on http://localhost:${PORT}`);
-});
-
-//
-// 🛑 GRACEFUL SHUTDOWN
-const shutdown = (signal: string) => {
-    logger.warn(`⚠️ ${signal} received. Closing server...`);
-
-    server.close(async () => {
-        logger.info("HTTP server closed");
-
-        try {
-            // If using mysql pool:
-            // await pool.end();
-
-            logger.info("Cleanup done. Exiting...");
-            process.exit(0);
-        } catch (err) {
-            logger.error("Shutdown error", err);
-            process.exit(1);
-        }
-    });
-
-    setTimeout(() => {
-        logger.error("Force shutdown");
-        process.exit(1);
-    }, 10000).unref();
 };
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+// 🔥 Kick off startup
+startServer();
 
 //
 // 💥 PROCESS-LEVEL SAFETY
@@ -154,4 +162,5 @@ process.on("uncaughtException", (err) => {
 
 process.on("unhandledRejection", (reason) => {
     logger.error("Unhandled Rejection", reason);
+    process.exit(1);
 });

@@ -6,5 +6,4 @@ Features :-
 
 ---
 TODO =>
-1. Not authorize still can view dashboard right but say contact owner for permission.
-2. Unknown Device in profile page other active session fix that bug
+1. redis invalidate when data is updated pending otherwise 10 minute wait to get new data.

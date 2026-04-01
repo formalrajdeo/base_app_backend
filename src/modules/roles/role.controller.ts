@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import { RoleService } from "./role.service.js";
 import createHttpError from "http-errors";
+import { invalidateUserPermissions } from "@/services/authorization.service.js";
 
 export const RoleController = {
     async create(req: Request, res: Response, next: NextFunction) {
@@ -60,7 +61,6 @@ export const RoleController = {
     async assignPermission(req: Request, res: Response, next: NextFunction) {
         try {
             const { roleId, permissionId } = req.params as { roleId: string; permissionId: string };
-
             await RoleService.assignPermission(roleId, permissionId);
 
             res.json({ success: true });
@@ -72,7 +72,7 @@ export const RoleController = {
     async removePermission(req: Request, res: Response, next: NextFunction) {
         try {
             const { roleId, permissionId } = req.params as { roleId: string; permissionId: string };
-
+            await invalidateUserPermissions(req.user.id); // TODO: not worked check again
             await RoleService.removePermission(roleId, permissionId);
 
             res.json({ success: true });

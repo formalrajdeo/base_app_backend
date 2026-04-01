@@ -1,72 +1,22 @@
-// src/modules/resources/resource.routes.ts
-
 import { Router } from "express";
 import { ResourceController } from "./resource.controller";
 import { validateBody } from "@/lib/validate";
 import { createResourceSchema } from "./resource.schema";
 import { authenticate } from "@/middleware/auth";
-import { authorize } from "@/middleware/authorize";
+import { Module } from "@/constants/permissions.js";
+import { authFor } from "@/lib/rbac";
 
 const router = Router();
+const auth = authFor(Module.RESOURCES);
 
-/**
- * =========================
- * RESOURCE ROUTES
- * =========================
- */
+// RESOURCE CRUD
+router.post("/", authenticate, auth.CREATE, validateBody(createResourceSchema), ResourceController.create);
+router.get("/", authenticate, auth.READ, ResourceController.getAll);
+router.get("/with-permissions", authenticate, auth.READ, ResourceController.getWithPermissions);
+router.delete("/:id", authenticate, auth.DELETE, ResourceController.delete);
 
-// Create resource
-router.post(
-    "/",
-    authenticate,
-    authorize("resources", "CREATE"),
-    validateBody(createResourceSchema),
-    ResourceController.create
-);
-
-// Get all resources
-router.get(
-    "/",
-    authenticate,
-    authorize("resources", "READ"),
-    ResourceController.getAll
-);
-
-// Get resources with permissions (grouped)
-router.get(
-    "/with-permissions",
-    authenticate,
-    authorize("resources", "READ"),
-    ResourceController.getWithPermissions
-);
-
-router.delete(
-    "/:id",
-    authenticate,
-    authorize("resources", "DELETE"),
-    ResourceController.delete
-);
-
-/**
- * =========================
- * ACTION (PERMISSION) ROUTES 🔥
- * =========================
- */
-
-// Create new action for a resource
-router.post(
-    "/:resourceId/actions",
-    authenticate,
-    authorize("resources", "UPDATE"),
-    ResourceController.createAction
-);
-
-// Delete action from resource
-router.delete(
-    "/:resourceId/actions/:permissionId",
-    authenticate,
-    authorize("resources", "UPDATE"),
-    ResourceController.deleteAction
-);
+// RESOURCE ACTIONS
+router.post("/:resourceId/actions", authenticate, auth.UPDATE, ResourceController.createAction);
+router.delete("/:resourceId/actions/:permissionId", authenticate, auth.UPDATE, ResourceController.deleteAction);
 
 export default router;
