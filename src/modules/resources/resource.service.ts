@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 
 export const ResourceService = {
     async createResource(name: string, description?: string) {
-        // 🔥 prevent duplicate resource
+        // prevent duplicate resource
         const existing = await db
             .select()
             .from(resources)

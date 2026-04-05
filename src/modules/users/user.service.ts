@@ -4,6 +4,31 @@ import { userRoles, roles } from "@/db/schema/rbac.js";
 import { v4 as uuid } from "uuid";
 import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
+import { invalidateUserPermissions } from "@/services/authorization.service";
+
+async function syncUserRole(userId: string) {
+  const rolesData = await db
+    .select({ name: roles.name })
+    .from(userRoles)
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = rolesData.map(r => r.name);
+
+  // Check whether the user holds any role that grants administrative privileges
+  const isAdmin = roleNames.some(r =>
+    ["admin"].includes(r) // Add roles like 'superadmin' here if they should be treated as admin-level
+  );
+
+  const newRole = isAdmin ? "admin" : "user";
+
+  await db
+    .update(user)
+    .set({ role: newRole })
+    .where(eq(user.id, userId));
+
+  await invalidateUserPermissions(userId);
+}
 
 export const UserService = {
   async create(name: string, email: string, password: string) {
@@ -26,7 +51,7 @@ export const UserService = {
     };
   },
 
-  // 🔥 GET ALL USERS WITH ROLES
+  // GET ALL USERS WITH ROLES
   async getAll() {
     const usersData = await db.select().from(user);
 
@@ -57,7 +82,7 @@ export const UserService = {
     return result;
   },
 
-  // 🔥 GET USER BY ID WITH ROLES
+  // GET USER BY ID WITH ROLES
   async getById(id: string) {
     const result = await db
       .select()
@@ -99,28 +124,10 @@ export const UserService = {
 
     await db.update(user).set(data).where(eq(user.id, id));
 
-    return await UserService.getById(id); // 🔥 returns with roles
+    return await UserService.getById(id); // returns with roles
   },
 
-  // ASSIGN MULTIPLE ROLES
-  async assignRoles(userId: string, roleIds: string[]) {
-    // 🧹 Step 1: remove old roles
-    await db.delete(userRoles).where(eq(userRoles.userId, userId));
-
-    // 🧱 Step 2: insert new roles
-    if (roleIds.length > 0) {
-      const values = roleIds.map((roleId) => ({
-        userId,
-        roleId,
-      }));
-
-      await db.insert(userRoles).values(values);
-    }
-
-    return { userId, roleIds };
-  },
-
-  // 🔥 ADD SINGLE ROLE
+  // ADD SINGLE ROLE
   async addRole(userId: string, roleId: string) {
     // prevent duplicate
     const existing = await db
@@ -139,10 +146,12 @@ export const UserService = {
       roleId,
     });
 
+    // Sync BetterAuth role
+    await syncUserRole(userId);
     return { userId, roleId };
   },
 
-  // 🔥 REMOVE SINGLE ROLE
+  // REMOVE SINGLE ROLE
   async removeRole(userId: string, roleId: string) {
     await db
       .delete(userRoles)
@@ -153,6 +162,7 @@ export const UserService = {
         )
       );
 
+    await syncUserRole(userId);
     return { userId, roleId };
   },
 

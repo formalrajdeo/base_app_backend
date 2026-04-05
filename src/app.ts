@@ -28,11 +28,9 @@ import { pool } from "./db/index.js";
 
 const app = express();
 
-//
 // 🔐 TRUST PROXY (IMPORTANT for rate limit behind proxy like nginx)
 app.set("trust proxy", 1);
 
-//
 // 🛡️ SECURITY MIDDLEWARES
 
 // Secure HTTP headers
@@ -55,7 +53,6 @@ app.use(hpp());
 // Compress responses
 app.use(compression());
 
-//
 // 🚦 RATE LIMITING
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
@@ -73,16 +70,13 @@ if (process.env.NODE_ENV === "production") {
 // app.all("/api/auth/*", toNodeHandler(auth));
 app.use("/api/auth", toNodeHandler(auth))
 
-//
 // 📦 BODY PARSER
 app.use(express.json({ limit: "10kb" }));
 
-//
 // 🪵 REQUEST LOGGER
 app.use(requestLogger);
 
 
-//
 // 🚏 ROUTES
 app.use("/api/v1/roles", roleRoutes);
 app.use("/api/v1/resources", resourceRoutes);
@@ -94,11 +88,9 @@ app.get("/", (req, res) => {
     res.send("Base backend is running!");
 });
 
-//
 // 🚨 ERROR HANDLER
 app.use(errorHandler);
 
-//
 // 🛠️ STARTUP FUNCTION: Test DB + Redis then start server
 const startServer = async () => {
     try {
@@ -150,11 +142,11 @@ const startServer = async () => {
     }
 };
 
-// 🔥 Kick off startup
+// Kick off startup
 startServer();
 
 //
-// 💥 PROCESS-LEVEL SAFETY
+// PROCESS-LEVEL SAFETY
 process.on("uncaughtException", (err) => {
     logger.error("Uncaught Exception", err);
     process.exit(1);

@@ -39,7 +39,7 @@ export const resources = mysqlTable("resources", {
 export const permissions = mysqlTable("permissions", {
     id: varchar("id", { length: 191 }).primaryKey(),
 
-    // 🔥 FK → resources
+    // FK → resources
     resourceId: varchar("resource_id", { length: 191 })
         .notNull()
         .references(() => resources.id, {

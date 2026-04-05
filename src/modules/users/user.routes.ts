@@ -19,7 +19,6 @@ router.delete("/:id", authenticate, auth.DELETE, UserController.delete);
 // router.post("/:id/rajnikanth", authenticate, auth.RAJNIKANTH, UserController.create);
 
 // ROLES
-router.post("/:id/roles", authenticate, auth.UPDATE, UserController.assignRoles);
 router.post("/:id/roles/:roleId", authenticate, auth.UPDATE, UserController.addRole);
 router.delete("/:id/roles/:roleId", authenticate, auth.UPDATE, UserController.removeRole);
 

@@ -5,6 +5,7 @@ import { and, eq, notInArray } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
 import { rolePermissions, permissions } from "@/db/schema/rbac.js";
+import { invalidateUsersByRole } from "@/services/authorization.service";
 
 export const RoleService = {
   async createRole(name: string) {
@@ -75,7 +76,7 @@ export const RoleService = {
         map[row.resourceId].permissions.push({
           id: row.permissionId,
           action: row.action,
-          assigned: assignedIds.has(row.permissionId), // 🔥 mark assigned
+          assigned: assignedIds.has(row.permissionId), // mark assigned
         });
       }
     }
@@ -85,11 +86,12 @@ export const RoleService = {
       permissions: Object.values(map).flatMap((r) => r.permissions),
     };
   },
-  async assignPermission(roleId: string, permissionId: string) {
+  async assignPermission(roleId: string, permissionId: string, userId: string) {
     await db.insert(rolePermissions).values({
       roleId,
       permissionId,
     });
+    await invalidateUsersByRole(roleId);
   },
   async assignResourceById(roleId: string, resourceId: string) {
     const perms = await db
@@ -103,6 +105,8 @@ export const RoleService = {
         permissionId: p.id,
       });
     }
+
+    await invalidateUsersByRole(roleId);
   },
   async removeResource(roleId: string, resourceId: string) {
     const perms = await db
@@ -120,8 +124,9 @@ export const RoleService = {
           )
         );
     }
+    await invalidateUsersByRole(roleId);
   },
-  async removePermission(roleId: string, permissionId: string) {
+  async removePermission(roleId: string, permissionId: string, userId: string) {
     await db
       .delete(rolePermissions)
       .where(
@@ -130,5 +135,6 @@ export const RoleService = {
           eq(rolePermissions.permissionId, permissionId)
         )
       );
+    await invalidateUsersByRole(roleId);
   },
 };

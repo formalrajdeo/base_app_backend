@@ -25,6 +25,6 @@ export async function sendOrganizationInviteEmail({
         <p>Best regards,<br>Your App Team</p>
       </div>
     `,
-    text: `You're invited to join the ${organization.name} organization\n\nHello ${inviter.name},\n\n${inviter.name} invited you to join the ${organization.name} organization. Please click the link below to accept/reject the invitation:\n\n${process.env["NEXT_PUBLIC_API_BASE_URL"]}/organizations/invites/${invitation.id}\n\nBest regards,\nYour App Team`,
+    text: `You're invited to join the ${organization.name} organization\n\nHello ${inviter.name},\n\n${inviter.name} invited you to join the ${organization.name} organization. Please click the link below to accept/reject the invitation:\n\n${process.env["NEXT_PUBLIC_BACKEND_BASE_URL"]}/organizations/invites/${invitation.id}\n\nBest regards,\nYour App Team`,
   })
 }

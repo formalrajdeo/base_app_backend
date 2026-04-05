@@ -61,7 +61,7 @@ export const RoleController = {
     async assignPermission(req: Request, res: Response, next: NextFunction) {
         try {
             const { roleId, permissionId } = req.params as { roleId: string; permissionId: string };
-            await RoleService.assignPermission(roleId, permissionId);
+            await RoleService.assignPermission(roleId, permissionId, req.user.id);
 
             res.json({ success: true });
         } catch (err) {
@@ -72,8 +72,7 @@ export const RoleController = {
     async removePermission(req: Request, res: Response, next: NextFunction) {
         try {
             const { roleId, permissionId } = req.params as { roleId: string; permissionId: string };
-            await invalidateUserPermissions(req.user.id); // TODO: not worked check again
-            await RoleService.removePermission(roleId, permissionId);
+            await RoleService.removePermission(roleId, permissionId, req.user.id);
 
             res.json({ success: true });
         } catch (err) {

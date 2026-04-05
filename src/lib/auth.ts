@@ -12,6 +12,10 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { defaultStatements, userAc, adminAc } from "better-auth/plugins/admin/access";
 import { invalidateUserPermissions, getUserPermissions } from "@/services/authorization.service.js";
 import { logger } from "./logger";
+import { sendPasswordResetEmail } from "./emails/password-reset-email";
+import { sendEmailVerificationEmail } from "./emails/email-verification";
+import { sendEmailConfirmationEmail } from "./emails/email-confirmation";
+import { sendDeleteAccountVerificationEmail } from "./emails/delete-account-verification";
 
 // Environment helper
 function requireEnv(name: string): string {
@@ -48,18 +52,44 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    sendResetPassword: async ({ user, url }) => { /* send email */ },
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail({ user, url })
+    },
   },
   emailVerification: {
     autoSignInAfterVerification: true,
     sendOnSignUp: true,
-    sendVerificationEmail: async ({ user, url }) => { /* send email */ },
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmailVerificationEmail({ user, url })
+    },
   },
   session: { cookieCache: { enabled: true, maxAge: 60 } },
   user: {
-    changeEmail: { enabled: true },
-    deleteUser: { enabled: true },
-    additionalFields: { role: { type: "string", required: true, defaultValue: "user", input: false } },
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailVerification: async ({ user, url, newEmail }: { user: any, url: any, newEmail: any }) => {
+        await sendEmailConfirmationEmail({
+          // user: { ...user, email: newEmail },
+          user: { ...user },
+          url,
+          newEmail,
+        })
+      },
+    },
+    deleteUser: {
+      enabled: true,
+      sendDeleteAccountVerification: async ({ user, url }) => {
+        await sendDeleteAccountVerificationEmail({ user, url })
+      },
+    },
+    additionalFields: {
+      role: {
+        type: "string" as unknown as ["user", "admin"],
+        required: true,
+        defaultValue: "user",
+        input: false,
+      },
+    },
   },
   socialProviders: {
     github: { clientId: process.env.GITHUB_CLIENT_ID!, clientSecret: process.env.GITHUB_CLIENT_SECRET! },
@@ -85,19 +115,6 @@ export const auth = betterAuth({
         await getUserPermissions(userRecord.id);
       }
 
-      // ---------------- ROLE OR PERMISSION UPDATES ----------------
-      if (ctx.path.startsWith("/update-user-role") && ctx.context.userId) {
-        await invalidateUserPermissions(ctx.context.userId);
-      }
-
-      if (ctx.path.startsWith("/update-role-permissions") && ctx.body.roleIds) {
-        const affectedUsers = await db
-          .select({ userId: userRoles.userId })
-          .from(userRoles)
-          .where(inArray(userRoles.roleId, ctx.body.roleIds));
-
-        for (const u of affectedUsers) await invalidateUserPermissions(u.userId);
-      }
     }),
   },
   acceptNullOrigin: process.env.NODE_ENV === "development",
@@ -112,4 +129,26 @@ export const auth = betterAuth({
       },
     }),
   ],
+  /*
+  databaseHooks: {
+    session: {
+      create: {
+        before: async userSession => {
+          const membership = await db.query.member.findFirst({
+            where: eq(member.userId, userSession.userId),
+            orderBy: desc(member.createdAt),
+            columns: { organizationId: true },
+          })
+
+          return {
+            data: {
+              ...userSession,
+              activeOrganizationId: membership?.organizationId,
+            },
+          }
+        },
+      },
+    },
+  },
+  */
 });

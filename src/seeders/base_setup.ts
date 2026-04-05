@@ -177,7 +177,7 @@ async function seed() {
   // Editor gets ONLY posts permissions
   await db.insert(rolePermissions).values(
     permList
-      .filter(p => p.resourceId === postsResourceId) // 🔥 FIXED
+      .filter(p => p.resourceId === postsResourceId) // FIXED
       .map(p => ({
         roleId: editorRoleId,
         permissionId: p.id,

@@ -7,7 +7,7 @@ export const createResourceSchema = z.object({
         .string()
         .min(2, "Resource name too short")
         .max(100)
-        .regex(/^[a-zA-Z0-9_-]+$/, "Invalid resource name"), // 🔥 clean names
+        .regex(/^[a-zA-Z0-9_-]+$/, "Invalid resource name"), // clean names
 
     description: z
         .string()

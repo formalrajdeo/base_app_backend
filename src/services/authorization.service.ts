@@ -4,6 +4,21 @@ import { roles, userRoles, rolePermissions, permissions, resources } from "@/db/
 import { eq, inArray } from "drizzle-orm";
 import { redis } from "@/config/redis.js";
 
+export async function invalidateUsersByRole(roleId: string) {
+    const users = await db
+        .select({ userId: userRoles.userId })
+        .from(userRoles)
+        .where(eq(userRoles.roleId, roleId));
+
+    const pipeline = redis.pipeline();
+
+    for (const u of users) {
+        pipeline.del(`perm:${u.userId}`);
+    }
+
+    await pipeline.exec();
+}
+
 export async function invalidateUserPermissions(userId: string) {
     const cacheKey = `perm:${userId}`;
     await redis.del(cacheKey);
@@ -29,7 +44,7 @@ export async function getUserPermissions(userId: string) {
     if (userRolesResult.some(r => r.roleName === "superadmin")) {
         const perms = new Set(["*:*"]);
         await redis.sadd(cacheKey, "*:*");
-        await redis.expire(cacheKey, 60 * 10); // 60 seconds * 60 minutes = 3600 seconds = 1 hour
+        await redis.expire(cacheKey, 60 * 10); // 60 seconds * 10 minutes = 600 seconds = 10 minute
         return perms;
     }
 
@@ -48,7 +63,7 @@ export async function getUserPermissions(userId: string) {
     if (perms.size) {
         const pipeline = redis.pipeline();
         for (const p of perms) pipeline.sadd(cacheKey, p);
-        pipeline.expire(cacheKey, 60 * 10); // 10 min TTL
+        pipeline.expire(cacheKey, 60 * 2); // 2 min TTL
         await pipeline.exec();
     }
 
