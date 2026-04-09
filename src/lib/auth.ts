@@ -42,7 +42,7 @@ export const betterAuthPluginAdmin = betterAuthPluginAccessControl.newRole(admin
 // ---------------- AUTH CONFIG ----------------
 export const auth = betterAuth({
   appName: "Base App",
-  baseUrl: ENV.BACKEND_BASE_URL,
+  baseUrl: ENV.FRONTEND_BASE_URL,
   allowedOrigins: [ENV.BACKEND_BASE_URL],
   trustedOrigins: [ENV.BACKEND_BASE_URL, ENV.FRONTEND_BASE_URL],
   database: drizzleAdapter(db, {
